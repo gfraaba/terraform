@@ -6,3 +6,6 @@
 *.tfstate.backup
 # Ignore the crash log files
 crash.log
+
+# Ignore the DelMe directory
+DelMe/*
