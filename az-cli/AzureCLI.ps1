@@ -1,6 +1,5 @@
 # # https://go.microsoft.com/fwlink/?linkid=2271236
 
-# $SubscriptionId = '954cd2ab-618f-4856-9db9-9de24ee78bd6' # ISBEngineering Sub
 az login --use-device-code
 # az account set --subscription $SubscriptionId
 $SubscriptionId = az account show --query id -o tsv
