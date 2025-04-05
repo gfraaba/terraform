@@ -1,11 +1,16 @@
 # Ignore the .terraform directory
 .terraform
-# Ignore the .tfstate file
-*.tfstate
-# Ignore the .tfstate.backup file
-*.tfstate.backup
+
+# # Ignore the .tfstate file
+# *.tfstate
+# # Ignore the .tfstate.backup file
+# *.tfstate.backup
+
 # Ignore the crash log files
 crash.log
 
-# Ignore the DelMe directory
-DelMe/*
+# Ignore the DelMe directory and its contents
+**/DelMe/*
+
+# Ignore .DS_Store files recursively
+**/.DS_Store

@@ -1,8 +1,16 @@
+# # https://learn.microsoft.com/en-us/cli/azure/cheat-sheet-onboarding
 # # https://go.microsoft.com/fwlink/?linkid=2271236
 
+# # To update your subscription list, use the az account clear command. You will need to sign in again to see an updated list.
+# # Clearing your subscription cache is not technically the same process as logging out of Azure. However, when you clear your subscription cache, you cannot run Azure CLI commands, including az account set, until you sign in again.
+# az account clear
 az login --use-device-code
 # az account set --subscription $SubscriptionId
+# az account show --query "{subscriptionId:id, subscriptionName:name, tenantId:tenantId}" -o json
+# az account list --query "[].{subscriptionId:id, subscriptionName:name, tenantId:tenantId}" -o json
 $SubscriptionId = az account show --query id -o tsv
+# # Get access token for the active subscription
+# az account get-access-token
 $RGName = 'RGP-CIPSU-AzOPS-EASTUS'
 
 # Create a User Assigned Managed Identity
@@ -38,3 +46,55 @@ $ImageTag = 'latest'
 
 # Verify authentication by pulling an image from ACR
 docker pull ${AcrName}.azurecr.io/${ImageName}:${ImageTag} # "invalid reference format" error can mean the image isn't found in the registry
+
+# # Azure Container Apps
+# az containerapp up --name <CONTAINER_APP_NAME> --resource-group <RESOURCE_GROUP> --subscription <SUBSCRIPTION> --location <LOCATION> --environment <ENVIRONMENT_NAME> --artifact <WAR_FILE_PATH_AND_NAME> --build-env-vars BP_TOMCAT_VERSION=10.* --ingress external --target-port 8080 --query properties.configuration.ingress.fqdn
+az extension list --output table
+az extension add --name containerapp --upgrade --allow-preview
+az extension show --name containerapp
+$ContainerAppName = 'azops-container-app'
+$Location = 'eastus'
+$EnvironmentName = 'sandbox'
+$ArtifactPath = '~/github/repos/spring-framework-petclinic/target/petclinic.war'
+
+# TODO: Pass arguments related to ACR (registry server hostname, username, password) to the containerapp up command
+az containerapp up `
+    --name $ContainerAppName `
+    --resource-group $RGName `
+    --subscription $SubscriptionId `
+    --location $Location `
+    --environment $EnvironmentName `
+    --artifact $ArtifactPath `
+    --build-env-vars BP_TOMCAT_VERSION=10.* `
+    --ingress external `
+    --target-port 8080 `
+    --logs-workspace-id $LawId `
+    --query properties.configuration.ingress.fqdn
+
+# containerapp up command includes the --query properties.configuration.ingress.fqdn argument, which returns the fully qualified domain name (FQDN), also known as the app's URL. You can use this URL to access the app in a web browser.
+# http://azops-container-app.orangetree-f9c76f58.eastus.azurecontainerapps.io
+
+# # Cleanup script to delete resources
+# # List all Log Analytics Workspaces in the resource group
+# az monitor log-analytics workspace list --resource-group $RGName --query "[].{Name:name, ID:id}" --output table
+
+# # Replace 'LAW-AZOPS-EASTUS-1234' with the actual name of the automatically created LAW
+# $AutoCreatedLawName = 'LAW-AZOPS-EASTUS-1234'  # Replace with the actual name
+
+# # Delete the automatically created Log Analytics Workspace
+# az monitor log-analytics workspace delete --resource-group $RGName --workspace-name $AutoCreatedLawName --yes
+
+# # Delete the Log Analytics Workspace
+# az monitor log-analytics workspace delete --resource-group $RGName --workspace-name $LawName --yes
+
+# # Delete the Container Registry
+# az acr delete --resource-group $RGName --name $AcrName --yes
+
+# # Delete the User Assigned Managed Identity
+# az identity delete --resource-group $RGName --name $UamiName
+
+# # Delete the Azure Container App
+# az containerapp delete --name $ContainerAppName --resource-group $RGName --yes
+
+# # Delete the Container App Environment
+# az containerapp env delete --name $EnvironmentName --resource-group $RGName --yes

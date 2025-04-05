@@ -1,5 +1,23 @@
 locals {
 
+  custom_domain = "mycompany.com"
+  origin_groups_basic = {
+    app1 = {
+      subdomain = "subdomain"
+    }
+  }
+  origin_groups_ext = { 
+    for k, v in local.origin_groups_basic : "${replace(format("%s.%s.%s", k, v.subdomain, local.custom_domain), ".", "_")}" => merge(v, { domain = local.custom_domain })
+    # for k, v in local.origin_groups_basic : "${k}.${v.subdomain}" => merge(v, { domain = local.custom_domain })
+  }
+  origin_groups = merge({
+      for k, v in local.origin_groups_ext : "${k}-east" => v
+    },
+    {
+      for k, v in local.origin_groups_ext : "${k}-west" => v
+    }
+  )
+
   vm_settings_common = {
     os_type                = "Windows",
     data_disk_size_gb      = 100,
